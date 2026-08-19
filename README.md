@@ -26,8 +26,8 @@ npm i -g pnpm
 pnpm install
 ```
 
-> Electron 等需要 postinstall 的依赖已在根 `package.json` 的
-> `pnpm.onlyBuiltDependencies` 中放行，`pnpm install` 会自动处理。
+> Electron 等需要 postinstall 的依赖已在根 `pnpm-workspace.yaml` 的
+> `onlyBuiltDependencies` / `allowBuilds` 中放行，`pnpm install` 会自动处理。
 
 ## 构建与运行
 

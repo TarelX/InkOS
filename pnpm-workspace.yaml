@@ -1,3 +1,23 @@
 packages:
   - "packages/*"
   - "apps/*"
+
+overrides:
+  "@mariozechner/pi-ai": "0.67.1"
+  "@mariozechner/pi-agent-core": "0.67.1"
+
+onlyBuiltDependencies:
+  - electron
+  - electron-winstaller
+  - esbuild
+  - msw
+  - protobufjs
+  - tesseract.js
+
+allowBuilds:
+  electron: true
+  electron-winstaller: true
+  esbuild: true
+  msw: true
+  protobufjs: true
+  tesseract.js: true

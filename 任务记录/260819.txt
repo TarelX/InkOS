@@ -1,0 +1,1 @@
+1、fix：将 pnpm 11 已失效的 package.json pnpm.overrides / onlyBuiltDependencies 迁至 pnpm-workspace.yaml，补齐 allowBuilds 并恢复工作区 packages 配置，pnpm install 可正常完成;

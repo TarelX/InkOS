@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>故事台账 · InkOS Studio</title>
+  <style>
+    :root{color-scheme:light dark;--bg:light-dark(#f6f3ed,#1e1d1a);--panel:light-dark(#fff,#292824);--text:light-dark(#292621,#eeeae1);--muted:light-dark(#685f54,#bdb4a8);--line:light-dark(#d8d0c5,#4b4740);--brand:#9c5b35;font:16px/1.55 system-ui,"Microsoft YaHei",sans-serif}
+    *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text)}header,main{max-width:1400px;margin:auto;padding:20px}header{display:flex;gap:16px;align-items:center}h1{margin:0 auto 0 0}button,select,input,textarea{font:inherit;color:inherit;border:1px solid var(--line);border-radius:9px;background:var(--panel)}button,select{min-height:48px;padding:0 14px}button{cursor:pointer}.primary{background:var(--brand);color:white;border-color:var(--brand)}.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.stat,.panel{background:var(--panel);border:1px solid var(--line);border-radius:14px}.stat{padding:14px}.stat b{display:block;font-size:1.5rem}.stat span,.muted{color:var(--muted)}.grid{display:grid;grid-template-columns:1.4fr 1fr;gap:20px;margin-top:20px}.head{display:flex;align-items:center;gap:12px;padding:14px;border-bottom:1px solid var(--line)}.head h2{font-size:1.1rem;margin:0 auto 0 0}.head input{min-height:44px;padding:0 12px}.list{max-height:70vh;overflow:auto;padding:0 14px}.hook{padding:14px 0;border-bottom:1px solid var(--line)}.hook p{white-space:pre-wrap}.row{display:grid;grid-template-columns:150px 1fr auto;gap:8px}.row input,.row select{min-height:44px;padding:0 9px}.tabs{display:flex;gap:4px;padding:8px;overflow:auto}.tabs button[aria-selected=true]{background:var(--brand);color:#fff}.editor{padding:14px}textarea{width:100%;min-height:55vh;padding:12px;resize:vertical}.actions{display:flex;gap:12px;align-items:center;margin-top:10px}@media(max-width:900px){.stats{grid-template-columns:1fr 1fr}.grid{grid-template-columns:1fr}.row{grid-template-columns:1fr}header{flex-wrap:wrap}h1{width:100%}}
+  </style>
+</head>
+<body>
+<header><h1>故事台账</h1><label for="book">书籍</label><select id="book"></select><button id="reload">刷新</button></header>
+<main>
+  <section class="stats"><div class="stat"><b id="active">—</b><span>活跃钩子</span></div><div class="stat"><b id="total">—</b><span>历史总数</span></div><div class="stat"><b id="open">—</b><span>未回收</span></div><div class="stat"><b id="done">—</b><span>已回收</span></div></section>
+  <div class="grid">
+    <section class="panel"><div class="head"><h2>活跃伏笔</h2><input id="search" type="search" placeholder="搜索伏笔"></div><div id="hooks" class="list"></div></section>
+    <section class="panel"><div class="tabs" role="tablist"><button aria-selected="true" data-tab="currentState">当前状态</button><button aria-selected="false" data-tab="particleLedger">资源台账</button><button aria-selected="false" data-tab="subplotBoard">支线看板</button><button aria-selected="false" data-tab="auditReport">审计报告</button></div><div class="editor"><textarea id="editor"></textarea><div class="actions"><button id="save" class="primary">保存文件</button><span id="msg" class="muted"></span></div></div></section>
+  </div>
+</main>
+<script>
+const $=id=>document.getElementById(id),files={currentState:"current_state.md",particleLedger:"particle_ledger.md",subplotBoard:"subplot_board.md"};let data,tab="currentState";
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+async function api(url,opt){const r=await fetch(url,opt),b=await r.json().catch(()=>({}));if(!r.ok)throw Error(b.error||`HTTP ${r.status}`);return b}
+function note(s){$("msg").textContent=s}
+async function books(){const r=await api("/api/v1/books");$("book").innerHTML=r.books.map(b=>`<option value="${esc(b.id)}">${esc(b.title||b.id)}</option>`).join("");await load()}
+async function load(){data=await api(`/api/v1/books/${encodeURIComponent($("book").value)}/story-ledger`);$("active").textContent=data.hooks.length;$("total").textContent=data.archive.totalHooks??0;$("open").textContent=data.archive.unresolved??"—";$("done").textContent=data.archive.resolved??"—";render();edit();note("已加载")}
+function render(){const q=$("search").value.toLowerCase();const h=data.hooks.filter(x=>JSON.stringify(x).toLowerCase().includes(q));$("hooks").innerHTML=h.map(x=>`<article class="hook"><b>${esc(x.hookId)}</b> <span class="muted">第${x.startChapter}章 · ${esc(x.status)}</span><p>${esc(x.notes)}</p><div class="row"><select data-status>${["open","progressing","partial_payoff","deferred","resolved"].map(s=>`<option ${s===x.status?"selected":""}>${s}</option>`).join("")}</select><input data-notes value="${esc(x.notes)}"><button class="primary" data-hook="${esc(x.hookId)}">保存钩子</button></div></article>`).join("")||"<p>没有匹配项</p>"}
+function edit(){$("editor").value=tab==="auditReport"?data.auditReport:data.files[tab]||"";$("editor").readOnly=tab==="auditReport";$("save").hidden=tab==="auditReport"}
+$("hooks").onclick=async e=>{const b=e.target.closest("[data-hook]");if(!b)return;const a=b.closest(".hook");await api(`/api/v1/books/${encodeURIComponent($("book").value)}/story-ledger/hooks/${encodeURIComponent(b.dataset.hook)}`,{method:"PUT",headers:{"content-type":"application/json"},body:JSON.stringify({status:a.querySelector("[data-status]").value,notes:a.querySelector("[data-notes]").value})});await load()};
+document.querySelector(".tabs").onclick=e=>{const b=e.target.closest("[data-tab]");if(!b)return;tab=b.dataset.tab;document.querySelectorAll("[data-tab]").forEach(x=>x.setAttribute("aria-selected",x===b));edit()};
+$("save").onclick=async()=>{await api(`/api/v1/books/${encodeURIComponent($("book").value)}/story-ledger/file/${files[tab]}`,{method:"PUT",headers:{"content-type":"application/json"},body:JSON.stringify({content:$("editor").value})});data.files[tab]=$("editor").value;note("保存成功")};
+$("search").oninput=render;$("book").onchange=load;$("reload").onclick=load;books().catch(e=>note(e.message));
+</script>
+</body></html>

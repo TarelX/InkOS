@@ -1,0 +1,42 @@
+{
+  "name": "inkos-v2-desktop",
+  "productName": "InkOS V2",
+  "version": "2.1.0",
+  "description": "InkOS V2 desktop shell (monorepo build, portable dir)",
+  "main": "main.cjs",
+  "private": true,
+  "license": "AGPL-3.0-only",
+  "scripts": {
+    "start": "electron .",
+    "pack": "electron-builder --win --dir"
+  },
+  "build": {
+    "appId": "com.inkos.v2.desktop",
+    "productName": "InkOS V2",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "main.cjs",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "resources/inkos",
+        "to": "inkos"
+      }
+    ],
+    "win": {
+      "target": [
+        "dir"
+      ]
+    },
+    "electronDownload": {
+      "mirror": "https://npmmirror.com/mirrors/electron/"
+    }
+  },
+  "devDependencies": {
+    "electron": "^33.0.0",
+    "electron-builder": "^25.0.0"
+  }
+}

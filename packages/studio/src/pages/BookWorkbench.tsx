@@ -288,11 +288,12 @@ interface StateDoc { throughChapter: number; worldState: string[]; openQuestions
 // ---------- Design tokens（固定浅色设计稿配色） ----------------------------
 
 const C = {
-  page: "bg-[#eef2f8]",
-  pane: "bg-[#f6f8fc]",
-  card: "rounded-xl border border-[#e2e8f2] bg-white shadow-[0_1px_2px_rgba(15,30,60,0.04)]",
+  page: "bg-[#e8eef6]",
+  pane: "bg-[#f3f6fb]",
+  card: "rounded-xl border border-[#e2e8f2] bg-white shadow-[0_1px_3px_rgba(15,30,60,0.06)]",
   textMain: "text-slate-800",
-  blueBtn: "bg-[#2563eb] text-white hover:bg-[#1d4ed8]",
+  blueBtn: "bg-[#2563eb] text-white hover:bg-[#1d4ed8] shadow-sm shadow-[#2563eb]/20",
+  ghostBtn: "border border-white/30 bg-white/5 text-white/90 hover:bg-white/10",
   border: "border-[#e2e8f2]",
 } as const;
 
@@ -338,7 +339,7 @@ function ChapterStatusDot({ chapter }: { chapter: ChapterRow }) {
 
 function StatusIcon({ status }: { status: string }) {
   switch (status) {
-    case "succeeded": return <CheckCircle2 size={15} className="text-emerald-500 shrink-0" />;
+    case "succeeded": return <CheckCircle2 size={17} className="text-emerald-500 shrink-0" />;
     case "running": return <Loader2 size={15} className="text-[#2563eb] animate-spin shrink-0" />;
     case "waiting_approval": return <ShieldAlert size={15} className="text-amber-500 shrink-0" />;
     case "failed": return <XCircle size={15} className="text-red-500 shrink-0" />;
@@ -360,12 +361,12 @@ function Card({ title, extra, children, className = "" }: { title?: React.ReactN
   return (
     <div className={`${C.card} ${className}`}>
       {title && (
-        <div className="flex items-center justify-between px-3.5 pt-3 pb-1.5">
-          <span className={`text-[13px] font-semibold ${C.textMain}`}>{title}</span>
+        <div className="flex items-center justify-between gap-2 px-4 pt-3.5 pb-2">
+          <span className={`text-[13.5px] font-semibold ${C.textMain}`}>{title}</span>
           {extra}
         </div>
       )}
-      <div className={title ? "px-3.5 pb-3.5" : "p-3.5"}>{children}</div>
+      <div className={title ? "px-4 pb-4" : "p-4"}>{children}</div>
     </div>
   );
 }
@@ -862,7 +863,10 @@ export function BookWorkbench({ bookId, nav, theme, t, sse }: BookWorkbenchProps
           <span className="flex items-center gap-1.5 rounded-lg bg-[#2563eb] px-2 py-1 text-[13px] font-bold">
             <Sparkles size={13} /> InkOS V2
           </span>
-          <span className="truncate text-[15px] font-semibold">《{bookTitle}》</span>
+          <span className="min-w-0 truncate text-[15px] font-semibold">
+            {bookTitle ? `《${bookTitle}》` : "未命名书籍"}
+            <span className="ml-1.5 font-normal text-white/70">{ROLE_LABEL[role]}工作台</span>
+          </span>
         </div>
         <div className="hidden shrink-0 items-center gap-2 lg:flex">
           <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-400/15 px-2.5 py-1 text-[12px] font-medium text-emerald-300">
@@ -928,17 +932,17 @@ export function BookWorkbench({ bookId, nav, theme, t, sse }: BookWorkbenchProps
             onClick={() => selectedRunId && act("stale", () => postV2(`/runs/${selectedRunId}/stale-sweep`))}
             disabled={!selectedRunId || busy !== null}
             title="检查上游产物变更并标记过期节点"
-            className="inline-flex items-center gap-1.5 rounded-lg border border-white/25 px-2.5 py-1.5 text-[13px] text-white/90 hover:bg-white/10 disabled:opacity-40"
+            className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[13px] disabled:opacity-40 ${C.ghostBtn}`}
           >
             <RefreshCw size={13} /> 运行分析
           </button>
-          <button disabled title="由工作流「章级契约」节点产出" className="hidden xl:inline-flex items-center gap-1.5 rounded-lg border border-white/25 px-2.5 py-1.5 text-[13px] text-white/50">
+          <button disabled title="由工作流「章级契约」节点产出" className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[13px] opacity-50 ${C.ghostBtn}`}>
             <ListTree size={13} /> 生成章纲
           </button>
-          <button disabled title="漫剧分镜产线在 V2.3 交付" className="hidden xl:inline-flex items-center gap-1.5 rounded-lg border border-white/25 px-2.5 py-1.5 text-[13px] text-white/50">
+          <button disabled title="漫剧分镜产线在 V2.3 交付" className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[13px] opacity-50 ${C.ghostBtn}`}>
             <Film size={13} /> 生成分镜
           </button>
-          <button onClick={() => nav.toBook(bookId)} title="导出走书籍页（TXT/MD/EPUB）" className="inline-flex items-center gap-1.5 rounded-lg border border-white/25 px-2.5 py-1.5 text-[13px] text-white/90 hover:bg-white/10">
+          <button onClick={() => nav.toBook(bookId)} title="导出走书籍页（TXT/MD/EPUB）" className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[13px] ${C.ghostBtn}`}>
             <Download size={13} /> 导出
           </button>
           <div className="mx-1 h-5 w-px bg-white/15" />
@@ -968,12 +972,12 @@ export function BookWorkbench({ bookId, nav, theme, t, sse }: BookWorkbenchProps
                   <span className={`text-[13.5px] font-semibold ${C.textMain}`}>文件管理</span>
                   <Star size={13} className="text-slate-400" />
                 </div>
-                <div className={`flex items-center gap-1.5 rounded-lg border ${C.border} bg-white px-2 py-1.5`}>
+                <div className={`flex items-center gap-1.5 rounded-lg border ${C.border} bg-white px-2.5 py-2 shadow-[0_1px_2px_rgba(15,30,60,0.04)]`}>
                   <Search size={13} className="shrink-0 text-slate-400" />
                   <input
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
-                    placeholder="搜索章节或产物…"
+                    placeholder="搜索章节或文件夹…"
                     className={`w-full bg-transparent text-[12.5px] outline-none placeholder:text-slate-400 ${C.textMain}`}
                   />
                 </div>
@@ -1163,14 +1167,14 @@ export function BookWorkbench({ bookId, nav, theme, t, sse }: BookWorkbenchProps
                   </ExplorerSection>
                 )}
               </div>
-              <div className={`shrink-0 border-t ${C.border} px-3 py-2`}>
+              <div className={`shrink-0 border-t ${C.border} bg-white px-3 py-2.5`}>
                 {chapterPct !== null && (
                   <div className="mb-1.5">
                     <div className="mb-1 flex justify-between text-[11px] text-slate-500">
-                      <span>章节进度</span>
+                      <span>存储 / 进度</span>
                       <span className="tabular-nums">{chapters.length}/{targetChapters} · {chapterPct}%</span>
                     </div>
-                    <div className="h-1.5 overflow-hidden rounded-full bg-slate-200">
+                    <div className="h-2 overflow-hidden rounded-full bg-slate-200">
                       <div className="h-full rounded-full bg-[#2563eb]" style={{ width: `${chapterPct}%` }} />
                     </div>
                   </div>
@@ -1182,20 +1186,20 @@ export function BookWorkbench({ bookId, nav, theme, t, sse }: BookWorkbenchProps
           <Separator className="w-1 shrink-0 bg-[#e2e8f2] hover:bg-[#2563eb]/40 transition-colors cursor-col-resize" />
 
           {/* ======= ② Agent 对话 ======= */}
-          <Panel defaultSize="22%" minSize="320px" maxSize="460px" className={`border-r ${C.border} bg-background`}>
+          <Panel defaultSize="22%" minSize="320px" maxSize="460px" className={`border-r ${C.border} bg-white`}>
             <div className="flex h-full flex-col">
-              <div className={`flex shrink-0 items-center gap-2.5 border-b ${C.border} bg-white px-3 py-2.5`}>
-                <span className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-[#2563eb] to-violet-500 text-white">
-                  <Bot size={17} />
+              <div className={`flex shrink-0 items-center gap-2.5 border-b ${C.border} bg-white px-3.5 py-3`}>
+                <span className="flex h-10 w-10 items-center justify-center rounded-full bg-[#2563eb] text-white">
+                  <Bot size={18} />
                 </span>
                 <div className="min-w-0 flex-1">
-                  <div className={`text-[13.5px] font-semibold leading-tight ${C.textMain}`}>Story Architect</div>
-                  <div className="flex items-center gap-1 text-[11.5px] text-emerald-600">
-                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" /> 在线 · {ROLE_LABEL[role]}会话
+                  <div className={`text-[14px] font-semibold leading-tight ${C.textMain}`}>Story Architect</div>
+                  <div className="mt-0.5 flex items-center gap-1 text-[12px] text-emerald-600">
+                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" /> 在线
+                    <span className="text-slate-400">· {ROLE_LABEL[role]}会话</span>
                   </div>
                 </div>
-                {/* Context Synchronization：让用户知道 Agent 当前"看到了什么" */}
-                <div className="hidden min-w-0 shrink lg:block text-right text-[11px] leading-4 text-slate-400">
+                <div className="hidden min-w-0 shrink text-right text-[11px] leading-4 text-slate-400 lg:block">
                   {reader && <div className="truncate">章节：第{reader.number}章{reader.bookId !== bookId ? "（原著）" : ""}</div>}
                   {selChar && <div className="truncate">人物：{selChar}</div>}
                 </div>
@@ -1260,13 +1264,13 @@ export function BookWorkbench({ bookId, nav, theme, t, sse }: BookWorkbenchProps
                     </div>
                   </div>
                   {selectedRunId && (
-                    <div className={`mt-2 flex items-center gap-3 rounded-lg border ${C.border} bg-white px-2.5 py-1.5 text-[11.5px] text-slate-500`}>
+                    <div className={`mt-2.5 flex flex-wrap items-center gap-x-4 gap-y-1 rounded-lg border ${C.border} bg-white px-3 py-2 text-[12px] text-slate-500`}>
                       <span className={runActive ? "font-semibold text-[#2563eb]" : runStatus === "succeeded" ? "font-semibold text-emerald-600" : `font-semibold ${C.textMain}`}>
                         {runActive ? "运行中" : STATUS_LABEL[runStatus] ?? runStatus} {wfStats.done}/{wfStats.total}
                       </span>
-                      <span>已用时 <span className="tabular-nums font-medium text-slate-700">{fmtDuration(wfStats.elapsed)}</span></span>
+                      <span>已用时 <span className="tabular-nums font-semibold text-slate-700">{fmtDuration(wfStats.elapsed)}</span></span>
                       {runActive && Number.isFinite(wfStats.eta) && (
-                        <span>预计剩余 <span className="tabular-nums font-medium text-slate-700">{fmtDuration(wfStats.eta)}</span></span>
+                        <span>预计剩余 <span className="tabular-nums font-semibold text-slate-700">{fmtDuration(wfStats.eta)}</span></span>
                       )}
                     </div>
                   )}
@@ -1286,11 +1290,11 @@ export function BookWorkbench({ bookId, nav, theme, t, sse }: BookWorkbenchProps
                       {(template?.order ?? []).map((id, index) => {
                         const tplNode = template?.nodes.find((n) => n.id === id);
                         return (
-                          <div key={id} className={`mb-1.5 flex items-center gap-2 rounded-xl border ${C.border} bg-white/60 px-2.5 py-2`}>
-                            <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-slate-100 text-[11px] font-semibold text-slate-400">{index + 1}</span>
-                            <span className="flex-1 truncate text-[13px] text-slate-500">{tplNode?.label ?? id}</span>
-                            {tplNode?.approvalRequired && <span className="rounded bg-amber-50 px-1.5 text-[10.5px] text-amber-600">需审批</span>}
-                            <span className="text-[11px] text-slate-300">等待</span>
+                          <div key={id} className={`mb-2 flex items-center gap-2.5 rounded-xl border ${C.border} bg-white px-3 py-2.5`}>
+                            <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-slate-100 text-[11px] font-semibold text-slate-400">{index + 1}</span>
+                            <span className="flex-1 truncate text-[13.5px] text-slate-600">{tplNode?.label ?? id}</span>
+                            {tplNode?.approvalRequired && <span className="rounded-md bg-amber-50 px-1.5 py-0.5 text-[10.5px] font-medium text-amber-600">需审批</span>}
+                            <span className="text-[11px] text-slate-400">等待</span>
                           </div>
                         );
                       })}
@@ -1325,9 +1329,9 @@ export function BookWorkbench({ bookId, nav, theme, t, sse }: BookWorkbenchProps
                   )}
                 </div>
 
-                <div className={`max-h-[26%] shrink-0 overflow-y-auto border-t ${C.border} bg-white px-3 py-2`}>
-                  <div className="mb-1 flex items-center justify-between">
-                    <span className="text-[12px] font-semibold text-slate-600">任务日志（最新）</span>
+                <div className={`max-h-[28%] shrink-0 overflow-y-auto border-t ${C.border} bg-white px-3 py-2.5`}>
+                  <div className="mb-1.5 flex items-center justify-between">
+                    <span className="text-[12.5px] font-semibold text-slate-700">任务日志（最新）</span>
                     <span className="flex items-center gap-1.5">
                       <span className="flex rounded bg-slate-100 p-0.5 text-[10.5px]">
                         {(["all", "error"] as const).map((f) => (
@@ -1348,7 +1352,7 @@ export function BookWorkbench({ bookId, nav, theme, t, sse }: BookWorkbenchProps
                     .slice(-50)
                     .reverse()
                     .map((event) => (
-                      <div key={event.seq} className={`flex gap-1.5 text-[11.5px] leading-5 ${/failed|error/.test(event.type) ? "text-red-500" : "text-slate-500"}`}>
+                      <div key={event.seq} className={`flex gap-2 py-0.5 text-[12px] leading-5 ${/failed|error/.test(event.type) ? "text-red-500" : "text-slate-600"}`}>
                         <span className="shrink-0 tabular-nums text-slate-400">{(event.createdAt ?? "").slice(11, 19)}</span>
                         <span className="truncate">
                           {event.nodeId ? `${nodeLabel(event.nodeId)} · ` : ""}
@@ -1367,12 +1371,12 @@ export function BookWorkbench({ bookId, nav, theme, t, sse }: BookWorkbenchProps
           {/* Story Workspace 必须是最大工作区（规格书 §3） */}
           <Panel defaultSize="40%" minSize="560px" className={C.pane}>
             <div className="flex h-full flex-col">
-              <div className={`flex shrink-0 items-center gap-0.5 border-b ${C.border} bg-white px-2 pt-2`}>
+              <div className={`flex shrink-0 items-center gap-0.5 border-b ${C.border} bg-white px-3 pt-2`}>
                 {CANVAS_TABS.map((item) => (
                   <button
                     key={item.id}
                     onClick={() => setTab(item.id)}
-                    className={`relative px-3 py-2 text-[13px] transition-colors ${tab === item.id ? "font-semibold text-[#2563eb]" : "text-slate-500 hover:text-slate-700"}`}
+                    className={`relative px-3.5 py-2.5 text-[13.5px] transition-colors ${tab === item.id ? "font-semibold text-[#2563eb]" : "text-slate-500 hover:text-slate-700"}`}
                   >
                     {item.label}
                     {tab === item.id && <span className="absolute inset-x-2 bottom-0 h-0.5 rounded-full bg-[#2563eb]" />}
@@ -1456,7 +1460,7 @@ function ExplorerRow({ icon, label, onClick, meta, disabled, title }: {
       onClick={onClick}
       disabled={disabled}
       title={title}
-      className={`flex w-full items-center gap-1.5 rounded-md px-2 py-1.5 text-left text-[12.5px] ${
+      className={`flex w-full items-center gap-1.5 rounded-md px-2 py-[7px] text-left text-[13px] ${
         disabled ? "cursor-not-allowed text-slate-400" : "text-slate-700 hover:bg-[#e8eefb]"}`}
     >
       {icon} <span className="min-w-0 flex-1 truncate">{label}</span>
@@ -1471,10 +1475,10 @@ function ExplorerSection({ label, icon, children, defaultOpen = true }: {
   const [open, setOpen] = useState(defaultOpen);
   return (
     <div className="mt-1">
-      <button onClick={() => setOpen(!open)} className="flex w-full items-center gap-1 px-2 py-1 text-[12px] font-semibold text-slate-500 hover:text-slate-700">
-        {open ? <ChevronDown size={11} /> : <ChevronRight size={11} />} {icon} {label}
+      <button onClick={() => setOpen(!open)} className="flex w-full items-center gap-1.5 px-2 py-1.5 text-[12.5px] font-semibold text-slate-500 hover:text-slate-700">
+        {open ? <ChevronDown size={12} /> : <ChevronRight size={12} />} {icon} {label}
       </button>
-      {open && children}
+      {open && <div className="ml-2 border-l border-[#e8eef4] pl-1">{children}</div>}
     </div>
   );
 }
@@ -1508,8 +1512,8 @@ function ChapterTree({ chapters, search, current, muted, onOpen, bookmarkKey, bo
     return (
       <div
         key={chapter.number}
-        className={`group flex h-[30px] items-center justify-between gap-1 rounded-md px-2 text-[13px] hover:bg-[#e8eefb] [content-visibility:auto] [contain-intrinsic-size:auto_30px] ${
-          active ? "bg-[#e8eefb] font-medium text-[#1d4ed8]" : muted ? "text-slate-500" : "text-slate-700"}`}
+        className={`group flex h-8 items-center justify-between gap-1 rounded-md px-2 text-[13px] hover:bg-[#e8eefb] [content-visibility:auto] [contain-intrinsic-size:auto_32px] ${
+          active ? "bg-[#dbeafe] font-medium text-[#1d4ed8]" : muted ? "text-slate-500" : "text-slate-700"}`}
       >
         <button className="flex min-w-0 flex-1 items-center gap-1.5 text-left" title="在第四栏正文页内联阅读" onClick={() => onOpen(chapter.number)}>
           <span className="truncate">第{String(chapter.number).padStart(3, "0")}章 {chapter.title}</span>
@@ -1587,20 +1591,21 @@ function WorkflowNodeCard({
   return (
     <div className="relative">
       {!isFirst && <div className="absolute left-[18px] -top-1.5 h-1.5 w-px bg-slate-200" />}
-      <div className={`mb-1.5 rounded-xl border bg-white px-2.5 py-2 shadow-[0_1px_2px_rgba(15,30,60,0.04)] ${
-        node.status === "running" ? "border-[#2563eb]/60 ring-1 ring-[#2563eb]/20"
-        : node.status === "waiting_approval" ? "border-amber-400/70"
+      <div className={`mb-2 rounded-xl border bg-white px-3 py-2.5 ${
+        node.status === "running" ? "border-[#2563eb]/70 ring-2 ring-[#2563eb]/15"
+        : node.status === "waiting_approval" ? "border-amber-400/80 bg-amber-50/40"
         : node.status === "failed" ? "border-red-300"
+        : node.status === "succeeded" ? "border-emerald-200"
         : "border-[#e2e8f2]"
       }`}>
         <div className="flex items-center gap-2">
           <StatusIcon status={node.status} />
-          <span className="flex-1 truncate text-[13px] font-medium text-slate-800">{label}</span>
+          <span className="flex-1 truncate text-[13.5px] font-semibold text-slate-800">{label}</span>
           {node.startedAt && <span className="text-[11px] tabular-nums text-slate-400">{node.startedAt.slice(11, 19)}</span>}
-          <span className={`text-[11.5px] ${
-            node.status === "waiting_approval" ? "rounded bg-amber-100 px-1.5 py-0.5 font-medium text-amber-700"
-            : node.status === "succeeded" ? "text-emerald-600"
-            : node.status === "running" ? "font-medium text-[#2563eb]"
+          <span className={`text-[12px] ${
+            node.status === "waiting_approval" ? "rounded-md bg-amber-100 px-1.5 py-0.5 font-medium text-amber-700"
+            : node.status === "succeeded" ? "font-medium text-emerald-600"
+            : node.status === "running" ? "font-semibold text-[#2563eb]"
             : "text-slate-500"
           }`}>
             {STATUS_LABEL[node.status] ?? node.status}
@@ -1609,7 +1614,7 @@ function WorkflowNodeCard({
 
         {/* Agent / Skill 行（规格书 §21：任务卡必须能回答谁在干、用什么技能） */}
         {executor && (node.startedAt || running) && (
-          <div className="mt-1 flex items-center gap-1.5 text-[11px] text-slate-400">
+          <div className="mt-1.5 flex items-center gap-1.5 text-[11.5px] text-slate-400">
             <Bot size={11} className="shrink-0" />
             <span className="shrink-0 font-medium text-slate-500">{agentForExecutor(executor)}</span>
             <span className="truncate rounded bg-slate-100 px-1 font-mono text-[10.5px] text-slate-500" title={`Skill：${executor}`}>{executor}</span>
@@ -1619,14 +1624,14 @@ function WorkflowNodeCard({
 
         {/* 当前动作（规格书 §54：显示具体动作，不用"加载中"） */}
         {running && (currentAction || progress) && (
-          <p className="mt-1 truncate text-[12px] text-[#2563eb]" title={currentAction ?? undefined}>
+          <p className="mt-1 truncate text-[12.5px] text-[#2563eb]" title={currentAction ?? undefined}>
             {currentAction ?? (progress ? `正在处理 第 ${progress.completed}/${progress.total} 项` : "")}
             {currentAction && progress ? `（${progress.completed}/${progress.total}）` : ""}
           </p>
         )}
 
-        <div className="mt-1.5 flex items-center gap-2">
-          <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-slate-100">
+        <div className="mt-2 flex items-center gap-2">
+          <div className="h-2 flex-1 overflow-hidden rounded-full bg-slate-100">
             {pct === null
               ? <div className="h-full w-1/3 animate-pulse rounded-full bg-[#2563eb]/70" />
               : <div
@@ -1635,7 +1640,7 @@ function WorkflowNodeCard({
                 />}
           </div>
           {duration !== null && <span className="shrink-0 text-[11px] tabular-nums text-slate-400">{fmtDuration(duration)}</span>}
-          {pct !== null && node.status === "running" && <span className="shrink-0 text-[11px] tabular-nums font-medium text-[#2563eb]">{pct}%</span>}
+          {pct !== null && node.status === "running" && <span className="shrink-0 text-[12px] tabular-nums font-semibold text-[#2563eb]">{pct}%</span>}
         </div>
 
         {node.error && <p className="mt-1 line-clamp-2 text-[12px] text-red-500" title={node.error}>{node.error}</p>}
@@ -1995,30 +2000,39 @@ function ChapterReaderCanvas({
 
 // ---------- 通用画布组件 ----------------------------------------------------
 
-/** 三幕横向卡：把任意节拍序列均分成三幕。 */
+/** 三幕横向卡：把任意节拍序列均分成三幕，分色贴设计稿。 */
 function ActsRow({ beats }: { beats: Array<{ id: string; label: string; chapterRange: { from: number; to: number } | null }> }) {
   if (beats.length === 0) return <Empty>（主线骨架未生成）</Empty>;
   const per = Math.ceil(beats.length / 3);
   const acts = [beats.slice(0, per), beats.slice(per, per * 2), beats.slice(per * 2)].filter((a) => a.length > 0);
   const names = ["第一幕 · 建置", "第二幕 · 对抗", "第三幕 · 决战"];
+  const skins = [
+    { box: "border-emerald-200 bg-emerald-50/90", title: "text-emerald-800", bar: "bg-emerald-500", beat: "text-emerald-900/80" },
+    { box: "border-amber-200 bg-amber-50/90", title: "text-amber-800", bar: "bg-amber-500", beat: "text-amber-900/80" },
+    { box: "border-rose-200 bg-rose-50/90", title: "text-rose-800", bar: "bg-rose-500", beat: "text-rose-900/80" },
+  ];
   return (
-    <div className="flex items-stretch gap-2 overflow-x-auto pb-1">
+    <div className="grid grid-cols-1 gap-2 md:grid-cols-3">
       {acts.map((act, index) => {
         const from = act[0]?.chapterRange?.from;
         const to = act[act.length - 1]?.chapterRange?.to;
+        const skin = skins[index] ?? skins[0];
         return (
-          <div key={index} className="flex items-center gap-2">
-            <div className="w-[215px] shrink-0 rounded-lg border border-[#c7d8f7] bg-[#eef4ff] px-2.5 py-2">
-              <div className="flex items-center justify-between">
-                <span className="text-[12px] font-semibold text-[#2563eb]">{names[index] ?? `第${index + 1}幕`}</span>
-                {from != null && <span className="text-[11px] text-slate-500">{from}-{to} 章</span>}
+          <div key={index} className={`overflow-hidden rounded-xl border ${skin.box}`}>
+            <div className={`h-1 w-full ${skin.bar}`} />
+            <div className="px-3 py-2.5">
+              <div className="flex items-center justify-between gap-2">
+                <span className={`text-[12.5px] font-semibold ${skin.title}`}>{names[index] ?? `第${index + 1}幕`}</span>
+                {from != null && <span className="text-[11px] tabular-nums text-slate-500">{from}-{to} 章</span>}
               </div>
-              <ul className="mt-1 space-y-0.5">
-                {act.slice(0, 3).map((beat) => <li key={beat.id} className="truncate text-[11.5px] text-slate-600">· {beat.label}</li>)}
-                {act.length > 3 && <li className="text-[11px] text-slate-400">… 共 {act.length} 拍</li>}
+              <ul className="mt-1.5 space-y-1">
+                {act.map((beat) => (
+                  <li key={beat.id} className={`truncate text-[12px] leading-5 ${skin.beat}`}>
+                    {beat.label}
+                  </li>
+                ))}
               </ul>
             </div>
-            {index < acts.length - 1 && <ChevronRight size={16} className="shrink-0 text-[#2563eb]/50" />}
           </div>
         );
       })}
@@ -2026,18 +2040,21 @@ function ActsRow({ beats }: { beats: Array<{ id: string; label: string; chapterR
   );
 }
 
-/** 五项指标卡（数值 + 定性 + 来源注明）。 */
+/** 指标卡（数值 + 定性 + 来源注明），视觉贴总览六宫格。 */
 function MetricChips({ chips, source }: { chips: Array<{ label: string; en: string; value: number; hint: string; color: string }>; source: string }) {
   return (
     <div>
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-6">
         {chips.map((chip) => (
-          <div key={chip.en} className={`${C.card} px-2.5 py-2`}>
-            <div className="text-[12px] font-medium text-slate-700">{chip.label} <span className="text-[10.5px] text-slate-400">({chip.en})</span></div>
-            <div className={`mt-0.5 text-[17px] font-bold tabular-nums ${chip.color}`}>
-              {Number.isFinite(chip.value) ? `${Math.max(0, Math.min(10, chip.value)).toFixed(1)}/10` : "—"}
+          <div key={chip.en} className={`${C.card} px-3 py-2.5`}>
+            <div className="text-[12px] font-medium text-slate-500">
+              {chip.label} <span className="text-[10.5px] text-slate-400">({chip.en})</span>
             </div>
-            <div className="text-[11px] text-slate-400">{chip.hint}</div>
+            <div className={`mt-1 text-[22px] font-bold leading-7 tabular-nums ${chip.color}`}>
+              {Number.isFinite(chip.value) ? `${Math.max(0, Math.min(10, chip.value)).toFixed(1)}` : "—"}
+              {Number.isFinite(chip.value) && <span className="text-[12px] font-semibold text-slate-400">/10</span>}
+            </div>
+            <div className="text-[11.5px] text-slate-400">{chip.hint}</div>
           </div>
         ))}
       </div>
@@ -2519,13 +2536,21 @@ function CreationCanvas({ tab, doc, selChar, setSelChar }: {
 
   return (
     <>
-      <div className="text-[14px] font-semibold text-slate-800">故事设定与主线概览</div>
+      <div className="text-[15px] font-semibold text-slate-800">故事设定与主线概览</div>
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-3">
         <Card title="故事设定（Premise）">
           {brief ? (
-            <div className="space-y-1.5 text-[12.5px] leading-6 text-slate-600">
-              <p className="text-slate-800">{brief.coreFantasy || "（核心爽点待补）"}</p>
-              <p><span className="text-slate-400">题材：</span>{brief.genre.join("、") || "未指定"}｜<span className="text-slate-400">读者：</span>{brief.targetAudience || "未指定"}</p>
+            <div className="space-y-1.5 text-[13px] leading-6 text-slate-600">
+              <p className="text-[13.5px] font-medium text-slate-800">{brief.coreFantasy || "（核心爽点待补）"}</p>
+              {brief.genre.length > 0 && (
+                <p className="flex flex-wrap items-center gap-1.5">
+                  <span className="text-slate-400">类型：</span>
+                  {brief.genre.map((g) => (
+                    <span key={g} className="rounded-md bg-slate-100 px-1.5 text-[11.5px] text-slate-600">{g}</span>
+                  ))}
+                </p>
+              )}
+              <p><span className="text-slate-400">读者：</span>{brief.targetAudience || "未指定"}</p>
               <p><span className="text-slate-400">篇幅：</span>{brief.targetChapters ?? "?"} 章 · 单章约 {brief.chapterWordTarget} 字 · {brief.pov}</p>
               {brief.assumptions.length > 0 && <p className="text-amber-600">假设（需确认）：{brief.assumptions.join("；")}</p>}
             </div>
@@ -2551,8 +2576,10 @@ function CreationCanvas({ tab, doc, selChar, setSelChar }: {
         <Card title={`章节节拍${contracts?.length ? `（前 ${contracts.length} 章契约）` : ""}`}>
           {!contracts?.length && <Empty>章级契约由工作流「章级契约」节点产出。</Empty>}
           {(contracts ?? []).map((contract) => (
-            <div key={contract.chapter} className="mb-1.5 flex items-start gap-1.5 text-[12.5px] text-slate-700">
-              <CheckCircle2 size={13} className="mt-0.5 shrink-0 text-emerald-500" />
+            <div key={contract.chapter} className="mb-2 flex items-start gap-2.5 text-[13px] text-slate-700">
+              <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#2563eb]/10 text-[11px] font-semibold text-[#2563eb]">
+                {String(contract.chapter).padStart(2, "0")}
+              </span>
               <div className="min-w-0">
                 <span className="font-medium">第{contract.chapter}章</span> {contract.chapterGoal}
                 <span className="text-slate-400">（{contract.beatIds.length} 个主线节拍{contract.endHook ? " · 有章末钩子" : ""}）</span>
@@ -2652,17 +2679,17 @@ function ChapterBeatsCard({ env, v1 }: { env: CanvasEnv; v1: V1ImportDoc | null 
     : [];
   return (
     <Card
-      title={number !== null ? `当前章节 · 第${number}章${record ? ` ${record.title}` : ""}` : "当前章节"}
+      title={number !== null ? `章节节拍 · 第${number}章${record ? ` ${record.title}` : ""}` : "章节节拍"}
       extra={number !== null ? (
         <button onClick={() => env.onOpenChapter(number)} className="rounded border border-[#e2e8f2] px-1.5 py-0.5 text-[11px] text-[#2563eb] hover:bg-[#e8eefb]">打开正文</button>
       ) : undefined}
     >
       {beats.length === 0 && <Empty>{number === null ? "（暂无章节）" : "左侧点选章节后，这里显示该章的剧情节拍。"}</Empty>}
-      <div className="space-y-1.5">
+      <div className="space-y-2">
         {beats.map((beat, i) => (
-          <div key={i} className="flex items-start gap-2 text-[12.5px]">
-            <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#2563eb]/10 text-[10.5px] font-semibold text-[#2563eb]">B{i + 1}</span>
-            <span className="min-w-0 leading-5 text-slate-700">{beat}</span>
+          <div key={i} className="flex items-start gap-2.5 text-[13px]">
+            <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#2563eb]/10 text-[11px] font-semibold text-[#2563eb]">B{i + 1}</span>
+            <span className="min-w-0 leading-6 text-slate-700">{beat}</span>
           </div>
         ))}
       </div>
@@ -2678,12 +2705,12 @@ const METRIC_DEFS = [
 /** 未拆文时的指标占位（规格书 §53：Idle 态，不留空白也不造假数据）。 */
 function IdleMetrics() {
   return (
-    <div className="grid grid-cols-3 gap-2 xl:grid-cols-6">
+    <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-6">
       {METRIC_DEFS.map((m) => (
         <div key={m.en} className={`${C.card} px-3 py-2.5`}>
-          <div className="text-[11.5px] text-slate-400">{m.label}</div>
-          <div className="mt-0.5 text-[22px] font-bold leading-7 text-slate-300">—</div>
-          <div className="text-[10.5px] text-slate-300">深度拆文后计算</div>
+          <div className="text-[12px] font-medium text-slate-500">{m.label} <span className="text-[10.5px] text-slate-400">({m.en})</span></div>
+          <div className="mt-1 text-[22px] font-bold leading-7 text-slate-300">—</div>
+          <div className="text-[11.5px] text-slate-300">深度拆文后计算</div>
         </div>
       ))}
     </div>
@@ -3028,24 +3055,31 @@ function AdaptationCanvas({ tab, doc, selChar, setSelChar, onExtractRelations, r
   const scenes = pacing?.scenes ?? [];
   const avg = (pick: (s: PacingDoc["scenes"][number]) => number) => (scenes.length ? scenes.reduce((a, s) => a + pick(s), 0) / scenes.length : NaN);
   const goalShare = events.length ? events.filter((e) => e.stateChanges.length > 0).length / events.length : NaN;
+  const auditChapters = env.chapters.filter((c) => (c.auditIssues ?? []).length > 0).length;
   const chips = [
     { label: "节奏", en: "Pacing", value: avg((s) => s.narrativeDelta) * 2 + 5, hint: scenes.length ? `${scenes.length} 场景` : "待拆文", color: "text-[#2563eb]" },
     { label: "冲突", en: "Conflict", value: avg((s) => s.conflictDelta) * 10, hint: (pacing?.mainlineStalls.length ?? 0) > 0 ? `${pacing!.mainlineStalls.length} 处停滞` : "无停滞", color: "text-red-500" },
     { label: "目标", en: "Goal", value: goalShare * 10, hint: events.length ? `${events.length} 事件` : "待拆文", color: "text-amber-600" },
     { label: "反转", en: "Twist", value: avg((s) => s.emotionDelta) * 10, hint: "情绪增量均值", color: "text-violet-600" },
     { label: "伏笔兑现", en: "Payoff", value: avg((s) => s.hookDelta) * 10, hint: "hook 增量均值", color: "text-emerald-600" },
+    { label: "连续性", en: "Continuity", value: env.chapters.length ? 10 * (1 - auditChapters / env.chapters.length) : NaN, hint: auditChapters ? `${auditChapters} 章有审计` : "无审计问题", color: "text-sky-600" },
   ];
   const { nodes, edges } = coOccurrence(events, characterMap);
 
   return (
     <>
-      <div className="text-[14px] font-semibold text-slate-800">故事设定与主线概览</div>
+      <div className="text-[15px] font-semibold text-slate-800">故事设定与主线概览</div>
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-3">
         <Card title="故事设定（Premise）">
           {contract ? (
-            <div className="space-y-1.5 text-[12.5px] leading-6 text-slate-600">
-              {contract.target.notes && <p className="text-slate-800">{contract.target.notes}</p>}
-              <p><span className="text-slate-400">类型：</span>{contract.target.genre || "（题材待定）"}</p>
+            <div className="space-y-1.5 text-[13px] leading-6 text-slate-600">
+              {contract.target.notes && <p className="text-[13.5px] font-medium text-slate-800">{contract.target.notes}</p>}
+              <p className="flex flex-wrap items-center gap-1.5">
+                <span className="text-slate-400">类型：</span>
+                {(contract.target.genre || "（题材待定）").split(/[、,/|]/).filter(Boolean).map((g) => (
+                  <span key={g} className="rounded-md bg-slate-100 px-1.5 text-[11.5px] text-slate-600">{g.trim()}</span>
+                ))}
+              </p>
               <p><span className="text-slate-400">源书：</span>《{contract.sourceBookId}》 · 目标 {contract.target.chapterCount ?? "?"} 章 · 节奏 {contract.target.pace}</p>
               <p className="text-[11.5px] text-slate-400">
                 must_preserve {contract.mustPreserve.length} 项 · 可变更 {contract.canChange.length} 项
@@ -3076,8 +3110,10 @@ function AdaptationCanvas({ tab, doc, selChar, setSelChar, onExtractRelations, r
         <Card title={`章节节拍${chapterContracts.length ? `（前 ${chapterContracts.length} 章契约）` : ""}`}>
           {chapterContracts.length === 0 && <Empty>章级契约由工作流「章级契约」节点产出。</Empty>}
           {chapterContracts.map((c) => (
-            <div key={c.chapter} className="mb-1.5 flex items-start gap-1.5 text-[12.5px] text-slate-700">
-              <CheckCircle2 size={13} className="mt-0.5 shrink-0 text-emerald-500" />
+            <div key={c.chapter} className="mb-2 flex items-start gap-2.5 text-[13px] text-slate-700">
+              <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#2563eb]/10 text-[11px] font-semibold text-[#2563eb]">
+                {String(c.chapter).padStart(2, "0")}
+              </span>
               <div className="min-w-0">
                 <span className="font-medium">第{c.chapter}章</span> {c.chapterGoal}
                 <span className="text-slate-400">（{c.sourceEventIds.length} 个源事件{c.endHook ? " · 有章末钩子" : ""}）</span>

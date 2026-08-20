@@ -13,22 +13,26 @@ export interface ChatMessageProps {
   readonly content: string;
   readonly timestamp: number;
   readonly theme: Theme;
+  /** 工作台窄列使用更紧凑的字号，其它会话保持原样。 */
+  readonly compact?: boolean;
 }
 
 export const ChatMessage = memo(function ChatMessage({
   role,
   content,
+  compact = false,
 }: ChatMessageProps) {
   const isUser = role === "user";
   const isError = content.startsWith("\u2717");
+  const textClass = compact ? "text-[13.5px] leading-6" : "text-[17px] leading-[1.72]";
 
   return (
     <Message from={role}>
       <MessageContent>
         {isUser ? (
-          <div className="text-[17px] leading-[1.72]">{content}</div>
+          <div className={textClass}>{content}</div>
         ) : isError ? (
-          <div className="flex items-center gap-2 text-[17px] leading-[1.72] text-destructive">
+          <div className={`flex items-center gap-2 text-destructive ${textClass}`}>
             <XCircle size={14} className="shrink-0" />
             <span>{content.replace(/^\u2717\s*/, "")}</span>
           </div>

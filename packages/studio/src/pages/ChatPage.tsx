@@ -42,6 +42,7 @@ import {
   RotateCcw,
   Square,
   Plus,
+  Send,
 } from "lucide-react";
 import { Shimmer } from "../components/ai-elements/shimmer";
 import {
@@ -427,6 +428,7 @@ export function ChatPage({ activeBookId, mode = activeBookId ? "book" : "book-cr
   const autoScrollPinnedRef = useRef(true);
 
   const isZh = t("nav.connected") === "\u5DF2\u8FDE\u63A5";
+  const isWorkbench = mode === "book";
   const hasBook = Boolean(activeBookId);
   const currentSessionKind: ChatSessionKind = activeSession?.sessionKind
     ?? (mode === "interactive-film-authoring" ? "interactive-film-authoring"
@@ -897,8 +899,12 @@ export function ChatPage({ activeBookId, mode = activeBookId ? "book" : "book-cr
         : "Describe a playable world, character situation, or opening action to start an interactive world.";
     }
     return isZh
-      ? "\u544A\u8BC9\u6211\u4F60\u60F3\u5199\u4EC0\u4E48\u2014\u2014\u9898\u6750\u3001\u4E16\u754C\u89C2\u3001\u4E3B\u89D2\u3001\u6838\u5FC3\u51B2\u7A81"
-      : "Tell me what you want to write \u2014 genre, world, protagonist, core conflict";
+      ? (isWorkbench
+        ? "我是你的创作搭档 Story Architect。告诉我题材、世界观、主角或核心冲突，我可以协助分析与改写。"
+        : "告诉我你想写什么——题材、世界观、主角、核心冲突")
+      : (isWorkbench
+        ? "I am Story Architect. Tell me the genre, world, protagonist, or core conflict."
+        : "Tell me what you want to write — genre, world, protagonist, core conflict");
   })();
 
   return (
@@ -914,7 +920,7 @@ export function ChatPage({ activeBookId, mode = activeBookId ? "book" : "book-cr
             scrollHeight: target.scrollHeight,
           });
         }}
-        className={`chat-message-scroll flex-1 overflow-y-auto [scrollbar-gutter:stable] px-4 py-6 transition-[padding] duration-200 ${worldPanelInsetClass}`}
+        className={`chat-message-scroll flex-1 overflow-y-auto [scrollbar-gutter:stable] transition-[padding] duration-200 ${isWorkbench ? "px-3 py-3" : "px-4 py-6"} ${worldPanelInsetClass}`}
       >
         {needsPlayModeChoice ? (
           <div className="h-full flex flex-col items-center justify-center text-center select-none gap-4">
@@ -944,6 +950,13 @@ export function ChatPage({ activeBookId, mode = activeBookId ? "book" : "book-cr
             </div>
           </div>
         ) : messages.length === 0 && !loading ? (
+          isWorkbench ? (
+            <div className="flex h-full flex-col justify-start pt-1">
+              <div className="max-w-[92%] rounded-2xl rounded-tl-md bg-[#eef2f8] px-3.5 py-2.5 text-left text-[13.5px] leading-6 text-slate-600">
+                {emptyGuidance}
+              </div>
+            </div>
+          ) : (
           <div className="h-full flex flex-col items-center justify-center text-center select-none">
             <div className="w-14 h-14 rounded-2xl border border-dashed border-border flex items-center justify-center mb-4 bg-secondary/30 opacity-40">
               <BotMessageSquare size={24} className="text-muted-foreground" />
@@ -952,13 +965,14 @@ export function ChatPage({ activeBookId, mode = activeBookId ? "book" : "book-cr
               {emptyGuidance}
             </p>
           </div>
+          )
         ) : (
-          <div className="max-w-3xl mx-auto space-y-4">
+          <div className={isWorkbench ? "space-y-3" : "max-w-3xl mx-auto space-y-4"}>
             {messages.map((msg, i) => (
               <div key={`${msg.timestamp}-${i}`}>
                 {msg.role === "user" ? (
                   /* User message */
-                  <ChatMessage role="user" content={msg.content} timestamp={msg.timestamp} theme={theme} />
+                  <ChatMessage role="user" content={msg.content} timestamp={msg.timestamp} theme={theme} compact={isWorkbench} />
                 ) : msg.parts && msg.parts.length > 0 ? (
                   /* Assistant message — parts-based rendering (chronological) */
                   /* Merge consecutive utility tool parts into one group */
@@ -1019,6 +1033,7 @@ export function ChatPage({ activeBookId, mode = activeBookId ? "book" : "book-cr
                               content={item.part.content}
                               timestamp={msg.timestamp}
                               theme={theme}
+                              compact={isWorkbench}
                             />
                           );
                         }
@@ -1033,6 +1048,7 @@ export function ChatPage({ activeBookId, mode = activeBookId ? "book" : "book-cr
                     content={msg.content}
                     timestamp={msg.timestamp}
                     theme={theme}
+                    compact={isWorkbench}
                   />
                 )}
               </div>
@@ -1104,11 +1120,11 @@ export function ChatPage({ activeBookId, mode = activeBookId ? "book" : "book-cr
         </div>
       ) : null}
       {needsPlayModeChoice ? null : (
-      <div className={`shrink-0 border-t border-border/40 px-4 py-3 transition-[padding] duration-200 ${worldPanelInsetClass}`}>
-        <div className="max-w-3xl mx-auto">
+      <div className={`shrink-0 ${isWorkbench ? "border-t border-[#e2e8f2] bg-white px-3 py-2.5" : "border-t border-border/40 px-4 py-3"} transition-[padding] duration-200 ${worldPanelInsetClass}`}>
+        <div className={isWorkbench ? "w-full" : "max-w-3xl mx-auto"}>
           <div className="flex items-start gap-2">
             <div
-              className="relative flex-1 rounded-xl bg-secondary/30 transition-all"
+              className={isWorkbench ? "relative flex-1 rounded-xl border border-[#e2e8f2] bg-[#f8fafd]" : "relative flex-1 rounded-xl bg-secondary/30 transition-all"}
               onDragOver={(e) => {
                 if ([...e.dataTransfer.items].some((item) => item.kind === "file")) e.preventDefault();
               }}
@@ -1226,10 +1242,10 @@ export function ChatPage({ activeBookId, mode = activeBookId ? "book" : "book-cr
                       addAttachedFiles(files);
                     }
                   }}
-                  placeholder={isZh ? "输入指令..." : "Enter command..."}
+                  placeholder={isWorkbench ? (isZh ? "输入指令，直接 Enter 发送，Shift+Enter 换行" : "Enter to send, Shift+Enter for a new line") : (isZh ? "输入指令..." : "Enter command...")}
                   disabled={!activeSessionId}
                   rows={1}
-                  className="flex-1 bg-transparent text-base leading-7 placeholder:text-muted-foreground/50 outline-none! border-none! ring-0! shadow-none focus:outline-none! focus:ring-0! focus:border-none! resize-none disabled:opacity-50 max-h-[200px] overflow-y-auto"
+                  className={`flex-1 bg-transparent outline-none! border-none! ring-0! shadow-none focus:outline-none! focus:ring-0! focus:border-none! resize-none disabled:opacity-50 max-h-[200px] overflow-y-auto ${isWorkbench ? "text-[13.5px] leading-6 placeholder:text-slate-400" : "text-base leading-7 placeholder:text-muted-foreground/50"}`}
                 />
                 <button
                   type="button"
@@ -1240,10 +1256,12 @@ export function ChatPage({ activeBookId, mode = activeBookId ? "book" : "book-cr
                 >
                   {loading && !input.trim() && attachedFiles.length === 0
                     ? <Square size={13} fill="currentColor" />
-                    : <ArrowUp size={14} strokeWidth={2.5} />}
+                    : isWorkbench
+                      ? <Send size={14} strokeWidth={2.2} />
+                      : <ArrowUp size={14} strokeWidth={2.5} />}
                 </button>
               </div>
-              <div className="flex items-center gap-2 px-3 pb-2 border-t border-border/20 pt-1.5">
+              <div className={`flex items-center gap-2 px-3 pb-2 border-t pt-1.5 ${isWorkbench ? "border-[#eef2f8]" : "border-border/20"}`}>
                 {modelPickerStatus === "loading" ? (
                   <span className="text-[15px] text-muted-foreground/40 animate-pulse">{isZh ? "加载模型..." : "Loading models..."}</span>
                 ) : modelPickerStatus === "ready" ? (
